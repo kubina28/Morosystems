@@ -1,0 +1,15 @@
+{
+  "name": "@automation/api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API clients, models and fixtures for the morosystems/todo-be backend.",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@automation/common": "1.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
+  }
+}

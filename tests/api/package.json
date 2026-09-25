@@ -1,0 +1,13 @@
+{
+  "name": "@automation/api-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API tests of the morosystems/todo-be backend.",
+  "dependencies": {
+    "@automation/common": "1.0.0",
+    "@automation/api": "1.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
+  }
+}
