@@ -1,0 +1,43 @@
+{
+  "name": "morosystems-test-automation",
+  "version": "1.0.0",
+  "description": "Automated GUI and API tests for the MoroSystems Automation Tester assignment (Playwright + TypeScript, Page Object Model).",
+  "private": true,
+  "workspaces": [
+    "src/*",
+    "tests/*"
+  ],
+  "type": "commonjs",
+  "engines": {
+    "node": ">=22.6"
+  },
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test tests/ui",
+    "test:api": "playwright test --project=api",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:regression": "playwright test --grep @regression",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "report": "playwright show-report reports/html",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "api:setup": "git clone --depth 1 https://github.com/morosystems/todo-be.git .todo-be && npm --prefix .todo-be install",
+    "api:start": "npm --prefix .todo-be start"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.2",
+    "eslint": "^10.11.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import-x": "^4.17.1",
+    "eslint-plugin-playwright": "^2.12.0",
+    "prettier": "^3.9.9",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.70.1"
+  }
+}
