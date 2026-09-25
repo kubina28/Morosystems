@@ -9,15 +9,18 @@ type UseOptions = NonNullable<PlaywrightTestConfig['use']>;
 const GOOGLE_TAG = new RegExp(Tag.Google);
 const UI_TEST_DIR = './tests/ui';
 const API_TEST_DIR = './tests/api';
+// Hides the `navigator.webdriver` automation flag which makes Google serve a CAPTCHA (Chromium-based browsers only).
+const CHROMIUM_LAUNCH_OPTIONS = { args: ['--disable-blink-features=AutomationControlled'] };
 
 export class PlaywrightFactory {
   private static readonly browserPresets: Record<BrowserName, UseOptions> = {
-    [BrowserName.Chromium]: {
-      ...devices['Desktop Chrome'],
-      launchOptions: {
-        // Hides the `navigator.webdriver` automation flag which makes Google serve a CAPTCHA.
-        args: ['--disable-blink-features=AutomationControlled'],
-      },
+    [BrowserName.Chromium]: { ...devices['Desktop Chrome'], launchOptions: CHROMIUM_LAUNCH_OPTIONS },
+    [BrowserName.Firefox]: devices['Desktop Firefox'],
+    [BrowserName.Webkit]: devices['Desktop Safari'],
+    [BrowserName.Edge]: {
+      ...devices['Desktop Edge'],
+      channel: 'msedge',
+      launchOptions: CHROMIUM_LAUNCH_OPTIONS,
     },
   };
 

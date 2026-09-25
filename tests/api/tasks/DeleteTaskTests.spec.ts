@@ -25,6 +25,8 @@ test.describe('DeleteTaskTests', { tag: [Tag.Regression, Tag.Api] }, () => {
     const tasks = (await (await tasksClient.getAll()).json()) as Task[];
     expect(tasks.map((task) => task.id)).not.toContain(createdTask.id);
   });
+
+  // The API documentation (Swagger) specifies 400 for a task ID that was not found.
   test('DeleteTask_UnknownId_ReturnsBadRequest', async () => {
     // Act
     const response = await tasksClient.delete(TodoApiData.nonExistingTaskId);

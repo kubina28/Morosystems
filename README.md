@@ -44,17 +44,31 @@ npm run report
 Configuration is read from `setup/environments/<TEST_ENV>.env` (default `prod`). Every value can be overridden
 by an environment variable:
 
-| Variable                             | Default         | Description                                                                   |
-| ------------------------------------ | --------------- | ----------------------------------------------------------------------------- |
-| `TEST_ENV`                           | `prod`          | environment file to load                                                      |
-| `HEADLESS`                           | `false`         | run browsers headless (see _Google and bot detection_)                        |
-| `BROWSERS`                           | `chromium`      | comma separated browser list                                                  |
-| `WORKERS`                            | `2`             | number of parallel workers                                                    |
-| `VIEWPORT_WIDTH` / `VIEWPORT_HEIGHT` | `1920` / `1080` | browser viewport applied to every test                                        |
-| `DEVICE`                             | –               | Playwright device preset (viewport, touch, user agent), replaces the viewport |
+| Variable                             | Default         | Description                                                                               |
+| ------------------------------------ | --------------- | ----------------------------------------------------------------------------------------- |
+| `TEST_ENV`                           | `prod`          | environment file to load                                                                  |
+| `HEADLESS`                           | `false`         | run browsers headless (see _Google and bot detection_)                                    |
+| `BROWSERS`                           | `chromium`      | comma separated browsers: `chromium`, `firefox`, `webkit`, `msedge` (see _Cross-browser_) |
+| `WORKERS`                            | `2`             | number of parallel workers                                                                |
+| `VIEWPORT_WIDTH` / `VIEWPORT_HEIGHT` | `1920` / `1080` | browser viewport applied to every test                                                    |
+| `DEVICE`                             | –               | Playwright device preset (viewport, touch, user agent), replaces the viewport             |
 
 The viewport also switches the website layout: below ~1920 px the _Kariéra_ menu item is collapsed into the
 _O nás_ submenu. Run e.g. `VIEWPORT_WIDTH=1280 VIEWPORT_HEIGHT=720 npm test` to cover the collapsed menu.
+
+### Cross-browser
+
+Presets for Firefox, WebKit (Safari engine) and Microsoft Edge are prepared in `PlaywrightFactory`, the default run
+uses Chromium only. Install the browsers once and select them with `BROWSERS`:
+
+```bash
+npx playwright install firefox webkit msedge
+BROWSERS=chromium,firefox,webkit,msedge npm test
+```
+
+Each browser gets its own website and Google project. The automation flag that lowers the chance of a Google
+CAPTCHA can be hidden only in Chromium-based browsers (Chrome, Edge), so Google tests may be skipped more often in
+Firefox and WebKit.
 
 ### Mobile
 
