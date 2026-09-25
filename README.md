@@ -154,6 +154,10 @@ API tests run in a separate Playwright project `api` without a browser. Every te
 `TasksClient` deletes all tasks created by the test afterwards, so tests are independent of the backend data and of
 each other.
 
+Before writing the tests, the API documentation, the implementation and the assignment were compared (shift-left).
+The findings are summarised in the [API specification review](docs/api-review.md); the tests treat the documentation
+as the specification, so differences fail the tests and are reported as bugs.
+
 **`tests/api/tasks/GetTasksTests.spec.ts`** – `@regression @api`
 
 - `GetTasks_RequestAll_ReturnsOkWithTaskList` – 200, the list contains a newly created task, every task has an ID,
@@ -164,10 +168,12 @@ each other.
 - `CreateTask_ValidText_ReturnsOkWithCreatedTask` – 200, generated ID, the text, `completed: false`, creation date
 - `CreateTask_ValidText_TaskIsListed`
 - `CreateTask_MissingText_ReturnsUnprocessableEntity` – 422 with a validation message
+- `CreateTask_NumericText_ReturnsUnprocessableEntity` – expects 422 as `text` is a string in the API
+  documentation, fails (see BUG-003)
 
 **`tests/api/tasks/UpdateTaskTests.spec.ts`** – `@regression @api`
 
-The API has no `PUT` endpoint (see _Observations_); the task text is updated by `POST /tasks/{id}`, as documented.
+The API has no `PUT` endpoint (see the [API specification review](docs/api-review.md)); the task text is updated by `POST /tasks/{id}`, as documented.
 
 - `UpdateTask_ValidText_ReturnsOkWithUpdatedTask` – only the text changes
 - `UpdateTask_ValidText_ChangeIsPersisted`
@@ -185,10 +191,11 @@ The API has no `PUT` endpoint (see _Observations_); the task text is updated by 
 Tests interact with the website the way a user does – one click, no retries. Failures caused by defects of the
 tested website are reported, not worked around in the tests.
 
-| ID                                                                                    | Summary                                                              | Severity |
-| ------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | -------- |
-| [BUG-001](docs/bug-reports/BUG-001-career-filters-react-late-on-first-interaction.md) | Kariéra – filters react about 1 s late on the first interaction      | Low      |
-| [BUG-002](docs/bug-reports/BUG-002-todo-api-returns-404-instead-of-documented-400.md) | Todo API – unknown task ID returns 404 instead of the documented 400 | Low      |
+| ID                                                                                                  | Summary                                                                   | Severity |
+| --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | -------- |
+| [BUG-001](docs/bug-reports/BUG-001-career-filters-react-late-on-first-interaction.md)               | Kariéra – filters react about 1 s late on the first interaction           | Low      |
+| [BUG-002](docs/bug-reports/BUG-002-todo-api-unknown-task-id-statuses-do-not-match-documentation.md) | Todo API – statuses for an unknown task ID do not match the documentation | Low      |
+| [BUG-003](docs/bug-reports/BUG-003-todo-api-accepts-non-string-task-text.md)                        | Todo API – task text of a non-string type is accepted                     | Medium   |
 
 ## Observations
 
@@ -200,12 +207,8 @@ Findings outside the tested scenarios that are worth a look, but are not reporte
 - **English version – `/kariera/` redirects to a missing page.** `morosystems.com/kariera/` answers 301 to
   `morosystems.com/?page_id=804`, which returns 404 _„Page not found“_. The German version redirects the same path
   to the Czech career page. The page is not linked anywhere, so only manually typed or old links are affected.
-- **Todo API – no `PUT` endpoint.** The assignment asks to update a task with `PUT`, the API answers `PUT /tasks/{id}`
-  with 404 _„Cannot PUT“_. Updating is done by `POST /tasks/{id}`, which matches the API documentation.
-- **Todo API – weak validation of the task text.** A missing or empty `text` is rejected with 422, but a number
-  (`{ "text": 123 }`) or whitespace only (`{ "text": "   " }`) is accepted and stored.
-- **Todo API – `GET /tasks` takes about 3 seconds.** Documented as intended (_„Slow service“_), so it is not treated as a
-  defect; the tests allow for it.
+- **Todo API** – the missing `PUT` endpoint, whitespace-only task text, unordered task list, non-standard success
+  statuses and the slow `GET /tasks` are described in the [API specification review](docs/api-review.md).
 
 ## Project structure
 

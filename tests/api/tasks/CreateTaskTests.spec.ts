@@ -41,4 +41,13 @@ test.describe('CreateTaskTests', { tag: [Tag.Regression, Tag.Api] }, () => {
     expect(response.status()).toBe(HttpStatus.UnprocessableEntity);
     expect(await response.text()).toContain("'text' field must be present");
   });
+
+  // The API documentation defines `text` as a string.
+  test('CreateTask_NumericText_ReturnsUnprocessableEntity', async () => {
+    // Act
+    const response = await tasksClient.create({ text: TodoApiData.numericTaskText });
+
+    // Assert
+    expect(response.status()).toBe(HttpStatus.UnprocessableEntity);
+  });
 });
