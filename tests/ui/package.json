@@ -1,0 +1,13 @@
+{
+  "name": "@automation/ui-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GUI tests of Google search and the MoroSystems website.",
+  "dependencies": {
+    "@automation/common": "1.0.0",
+    "@automation/ui": "1.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
+  }
+}

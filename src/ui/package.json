@@ -1,0 +1,15 @@
+{
+  "name": "@automation/ui",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Page objects, components and fixtures for Google search and the MoroSystems website.",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@automation/common": "1.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
+  }
+}
