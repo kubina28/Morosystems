@@ -7,7 +7,7 @@ test.describe('SearchTests', { tag: [Tag.Regression, Tag.Google] }, () => {
     await googleSearchPage.open();
   });
 
-  test('GoogleSearch_SearchMoroSystems_ShowsResultsPage', async () => {
+  test('GoogleSearch_SearchMoroSystems_ResultsPageIsOpened', async () => {
     // Act
     await googleSearchPage.search(GoogleSearchData.morosystemsSearchText);
 
@@ -19,7 +19,7 @@ test.describe('SearchTests', { tag: [Tag.Regression, Tag.Google] }, () => {
     await expect(googleResultsPage.organicResultLinks.first()).toBeVisible();
   });
 
-  test('GoogleSearch_SearchMoroSystems_ListsMoroSystemsWebsite', async () => {
+  test('GoogleSearch_SearchMoroSystems_MoroSystemsWebsiteIsListed', async () => {
     // Act
     await googleSearchPage.search(GoogleSearchData.morosystemsSearchText);
 
@@ -29,7 +29,7 @@ test.describe('SearchTests', { tag: [Tag.Regression, Tag.Google] }, () => {
     await expect(moroSystemsResult).toContainText(GoogleSearchData.morosystemsDomain);
   });
 
-  test('GoogleSearch_OpenMoroSystemsResult_OpensMoroSystemsWebsite', async () => {
+  test('GoogleSearch_OpenMoroSystemsResult_MoroSystemsWebsiteIsOpened', async () => {
     // Arrange
     await googleSearchPage.search(GoogleSearchData.morosystemsSearchText);
 

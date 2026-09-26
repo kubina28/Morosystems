@@ -32,14 +32,15 @@ npm run report
 
 ## Running tests
 
-| Command                              | What it runs                                              |
-| ------------------------------------ | --------------------------------------------------------- |
-| `npm test`                           | whole suite                                               |
-| `npm run test:smoke`                 | `@smoke` tests – the complete assignment flow (steps 1–7) |
-| `npm run test:regression`            | `@regression` tests                                       |
-| `npx playwright test --grep @career` | _Kariéra_ page tests only (no Google dependency)          |
-| `npm run test:api`                   | API tests only (the backend must be running)              |
-| `npm run test:debug`                 | Playwright inspector                                      |
+| Command                              | What it runs                                                |
+| ------------------------------------ | ----------------------------------------------------------- |
+| `npm test`                           | whole suite                                                 |
+| `npm run test:smoke`                 | `@smoke` tests – the complete assignment flow (steps 1–7)   |
+| `npm run test:regression`            | `@regression` tests                                         |
+| `npx playwright test --grep @career` | _Kariéra_ page tests only (no Google dependency)            |
+| `npm run test:api`                   | API tests only (the backend must be running)                |
+| `npm run test:debug`                 | Playwright inspector                                        |
+| `npm run test:update-snapshots`      | re-creates visual baselines after an intended design change |
 
 Configuration is read from `setup/environments/<TEST_ENV>.env` (default `prod`). Every value can be overridden
 by an environment variable:
@@ -55,6 +56,35 @@ by an environment variable:
 
 The viewport also switches the website layout: below ~1920 px the _Kariéra_ menu item is collapsed into the
 _O nás_ submenu. Run e.g. `VIEWPORT_WIDTH=1280 VIEWPORT_HEIGHT=720 npm test` to cover the collapsed menu.
+
+### Visual testing
+
+The website is managed in a CMS (WordPress), so its content can change at any time. Screenshot comparison is therefore
+used only on the **Kariéra page**, whose structure is expected to stay consistent, and CMS-managed content is excluded
+from the comparison. Homepages are not compared visually – they are marketing pages that change regularly.
+
+| Test                                      | Baseline      | What it checks                                           |
+| ----------------------------------------- | ------------- | -------------------------------------------------------- |
+| `MainMenu_ClickCareer_CareerPageIsOpened` | `career-page` | layout of the whole _Kariéra_ page on desktop and mobile |
+
+`expectVisualMatch()` (`src/common`) is added as the last assertion of the existing test (no separate visual test) and
+compares a page (full page) or a component (locator) with a baseline using Playwright `toHaveScreenshot`. The test
+runs in the desktop and the mobile configuration, so the same assertion covers both layouts.
+
+Visual changes of a component state are verified by its style instead of a screenshot – e.g.
+`CareerFilter_HoverJobPositionInBrno_JobPositionIsHighlighted` checks the colour before and after hover, independent of the
+position texts.
+
+- **Baselines** are test data of the UI project, stored in `src/ui/data/baselines/<environment>/<project>/<platform>/`,
+  so desktop, mobile, browsers and operating systems do not share images. Rendering differs between Windows and Linux,
+  so a CI run needs baselines created on its own platform.
+- **Dynamic content** managed in the CMS is excluded, the layout of the page is still compared (`dynamicContent` of
+  page objects): photos, video and iframes are hidden (their space is kept), content whose amount varies (open
+  positions, team carousel, quotes, case studies) is removed, so the page height does not depend on it.
+- **Stable capture** – the comparison waits for the page load and web fonts, scrolls the page to the top (a fixed
+  header would otherwise appear twice) and hides scrollbars (classic Windows scrollbars change the image width).
+- **Intended design change** – run `npm run test:update-snapshots`, review the new images and commit them.
+- A failed comparison shows the expected, actual and diff images in the HTML report.
 
 ### Cross-browser
 
@@ -104,37 +134,39 @@ positions filter) and `LanguageVersionTests`. They run independently of each oth
 
 **`tests/ui/e2e/UserJourneyTests.spec.ts`** – `@smoke @e2e @google`
 
-- `UserJourney_FindMoroSystemsOnGoogleAndFilterByBrno_ShowsOnlyPositionsInBrno` – the assignment GUI test case
+- `UserJourney_FindMoroSystemsOnGoogleAndFilterByBrno_OnlyJobPositionsInBrnoAreDisplayed` – the assignment GUI test case
   as one user journey (steps 1–7), including the validation of the search results content (the MoroSystems result
   with the `morosystems.cz` domain)
 
 **`tests/ui/google/search/SearchTests.spec.ts`** – `@regression @google`
 
-- `GoogleSearch_SearchMoroSystems_ShowsResultsPage` – URL, title, search box value, results
-- `GoogleSearch_SearchMoroSystems_ListsMoroSystemsWebsite` – result title and domain
-- `GoogleSearch_OpenMoroSystemsResult_OpensMoroSystemsWebsite`
+- `GoogleSearch_SearchMoroSystems_ResultsPageIsOpened` – URL, title, search box value, results
+- `GoogleSearch_SearchMoroSystems_MoroSystemsWebsiteIsListed` – result title and domain
+- `GoogleSearch_OpenMoroSystemsResult_MoroSystemsWebsiteIsOpened`
 
 **`tests/ui/morosystems/career/CareerFilterTests.spec.ts`** – `@regression @career`
 
 Exhaustive testing of all filter combinations is not possible, so cities are chosen by equivalence partitioning –
 one representative per class of filter behaviour.
 
-- `CareerFilter_OpenCitySelect_OffersAllCitiesWithAllCitiesSelected`
-- `CareerFilter_SelectBrno_ShowsExactlyPositionsInBrno` – city with positions: at least one position, exactly those
+- `CareerFilter_OpenCitySelect_AllCitiesAreOfferedWithAllCitiesSelected`
+- `CareerFilter_SelectBrno_OnlyJobPositionsInBrnoAreDisplayed` – city with positions: at least one position, exactly those
   located in Brno
-- `CareerFilter_SelectHradecKralove_ShowsExactlyPositionsInHradecKralove` – city listed as one of several locations
+- `CareerFilter_SelectHradecKralove_OnlyJobPositionsInHradecKraloveAreDisplayed` – city listed as one of several locations
   of a position
-- `CareerFilter_SelectPrague_ShowsExactlyPositionsInPrague` – city without positions (on production)
+- `CareerFilter_SelectPrague_OnlyJobPositionsInPragueAreDisplayed` – city without positions (on production)
 - `CareerFilter_SelectPragueAfterBrno_OnlyPragueIsSelected` – only one city can be selected, a new selection replaces
   the previous one
-- `CareerFilter_ResetToAllCities_ShowsAllPositions`
-- `CareerFilter_CheckGraduates_ShowsOnlyGraduatePositions`
-- `CareerFilter_UncheckGraduates_ShowsAllPositions`
-- `CareerFilter_CheckGraduatesWithBrnoSelected_ShowsOnlyGraduatePositionsInBrno`
+- `CareerFilter_ResetToAllCities_AllJobPositionsAreDisplayed`
+- `CareerFilter_HoverJobPositionInBrno_JobPositionIsHighlighted` – the text colour of a position changes from navy to white on
+  hover (`@desktop-only`, touch devices have no hover state)
+- `CareerFilter_CheckGraduates_OnlyGraduateJobPositionsAreDisplayed`
+- `CareerFilter_UncheckGraduates_AllJobPositionsAreDisplayed`
+- `CareerFilter_CheckGraduatesWithBrnoSelected_OnlyGraduateJobPositionsInBrnoAreDisplayed`
 
 **`tests/ui/morosystems/navigation/MainMenuTests.spec.ts`** – `@regression @career`
 
-- `MainMenu_ClickCareer_OpensCareerPage`
+- `MainMenu_ClickCareer_CareerPageIsOpened`
 
 **`tests/ui/morosystems/language/LanguageVersionTests.spec.ts`** – `@regression @career`
 
@@ -142,7 +174,7 @@ The _Kariéra_ page exists only in the Czech version; the English (`morosystems.
 versions do not offer it. Data-driven for English and German:
 
 - `LanguageVersion_Open<Language>Homepage_CareerLinkIsNotOffered` – page language and no career link on the page
-- `LanguageVersion_SwitchTo<Language>OnCareerPage_Opens<Language>Homepage` – the language switcher on _Kariéra_
+- `LanguageVersion_SwitchTo<Language>OnCareerPage_<Language>HomepageIsOpened` – the language switcher on _Kariéra_
   leads to the homepage of the selected language version, which offers no career link
 
 Open positions change over time, so filter results are validated against the positions rendered on the page rather
@@ -224,12 +256,13 @@ Findings outside the tested scenarios that are worth a look, but are not reporte
 │   │   ├── constants/            timeouts
 │   │   ├── enums/                browser names, test tags
 │   │   ├── factories/            PlaywrightFactory – browser presets, context options, projects
-│   │   └── utils/                @step decorator, enum and text helpers
+│   │   └── utils/                @step decorator, visual assertion, enum and text helpers
 │   ├── ui/                       project @automation/ui – GUI tests support
-│   │   ├── constants/            MoroSystems routes and language URLs, Google test data
+│   │   ├── constants/            MoroSystems routes, language URLs and colours, Google test data
+│   │   ├── data/baselines/       visual baselines per environment, project and platform
 │   │   ├── enums/                cities, languages
 │   │   ├── fixtures/             page objects declared per website, auto fixtures (setup, consent, console log)
-│   │   ├── models/               Position
+│   │   ├── models/               JobPosition
 │   │   ├── pom/                  BasePage, components (header, city select, language switcher, cookie dialogs), pages
 │   │   └── utils/                Google CAPTCHA guard
 │   └── api/                      project @automation/api – API tests support

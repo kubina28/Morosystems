@@ -24,7 +24,7 @@ test.describe('LanguageVersionTests', { tag: [Tag.Regression, Tag.Career] }, () 
       await expect(moroHomePage.careerLinks).toHaveCount(0);
     });
 
-    test(`LanguageVersion_SwitchTo${languageName}OnCareerPage_Opens${languageName}Homepage`, async () => {
+    test(`LanguageVersion_SwitchTo${languageName}OnCareerPage_${languageName}HomepageIsOpened`, async () => {
       // Arrange
       await careerPage.open();
 

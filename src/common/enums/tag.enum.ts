@@ -5,4 +5,5 @@ export enum Tag {
   Google = '@google',
   Career = '@career',
   Api = '@api',
+  DesktopOnly = '@desktop-only',
 }

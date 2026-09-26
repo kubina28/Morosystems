@@ -1,13 +1,13 @@
 # BUG-001: Kariéra – filters react about 1 s late on the first interaction
 
-|                     |                                                                                 |
-| ------------------- | ------------------------------------------------------------------------------- |
-| **Page**            | https://www.morosystems.cz/kariera/ – section _Koho hledáme_                    |
-| **Component**       | city select box (_Všechna města_), checkbox _Pozice vhodná pro absolventy_      |
-| **Severity**        | Low – the filters work, but do not respond to the first interaction immediately |
-| **Reproducibility** | 8 of 8 attempts                                                                 |
-| **Environment**     | production, Chromium 153 (Playwright 1.63), Windows 10                          |
-| **Found**           | 2026-09-25                                                                      |
+|                     |                                                                                                              |
+| ------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Page**            | https://www.morosystems.cz/kariera/ – section _Koho hledáme_                                                 |
+| **Component**       | city select box (_Všechna města_), checkbox _Pozice vhodná pro absolventy_, highlight of a position on hover |
+| **Severity**        | Low – the filters work, but do not respond to the first interaction immediately                              |
+| **Reproducibility** | 8 of 8 attempts                                                                                              |
+| **Environment**     | production, Chromium 153 (Playwright 1.63), Windows 10                                                       |
+| **Found**           | 2026-09-25                                                                                                   |
 
 ## Steps to reproduce
 
@@ -28,6 +28,10 @@ The list of cities opens (the positions are filtered) immediately after the clic
 - A user who clicks again during that time toggles the control back – the select opens and closes, the checkbox
   is checked and unchecked. In a scripted run clicking every 0.5 s, the checkbox filter was applied only after
   the **3rd click** (6 of 6 runs).
+- Hovering a position does not highlight it until the scripts are loaded: the hover style
+  (`.no-touchevents .c-positions__link:hover` – dark background, white text) depends on the `no-touchevents` class,
+  which the delayed Modernizr script adds to `<html>`. On the first hover after the page load the text colour stayed
+  `rgb(37, 39, 70)`; the class was still missing 8 s later.
 
 ## Evidence
 

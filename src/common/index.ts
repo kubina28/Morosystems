@@ -6,3 +6,4 @@ export * from './factories/playwright.factory';
 export * from './utils/enum.utils';
 export * from './utils/step.decorator';
 export * from './utils/text.utils';
+export * from './utils/visual.assertion';

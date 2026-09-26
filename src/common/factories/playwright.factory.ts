@@ -7,7 +7,9 @@ import { Tag } from '../enums/tag.enum';
 type UseOptions = NonNullable<PlaywrightTestConfig['use']>;
 
 const GOOGLE_TAG = new RegExp(Tag.Google);
+const DESKTOP_ONLY_TAG = new RegExp(Tag.DesktopOnly);
 const UI_TEST_DIR = './tests/ui';
+const UI_SNAPSHOT_PATH_TEMPLATE = `./src/ui/data/baselines/${environment.environmentName}/{projectName}/{platform}/{testFilePath}/{arg}{ext}`;
 const API_TEST_DIR = './tests/api';
 // Hides the `navigator.webdriver` automation flag which makes Google serve a CAPTCHA (Chromium-based browsers only).
 const CHROMIUM_LAUNCH_OPTIONS = { args: ['--disable-blink-features=AutomationControlled'] };
@@ -44,13 +46,26 @@ export class PlaywrightFactory {
     const uiProjects = environment.browserNames.flatMap((name) => {
       // Project options override the global `use`, so the desktop preset viewport must be replaced here.
       const use = { ...PlaywrightFactory.getBrowserPreset(name), ...PlaywrightFactory.getScreenOptions() };
-      const websiteProject: Project = { name, testDir: UI_TEST_DIR, use, grepInvert: GOOGLE_TAG };
+      const websiteProject: Project = {
+        name,
+        testDir: UI_TEST_DIR,
+        snapshotPathTemplate: UI_SNAPSHOT_PATH_TEMPLATE,
+        use,
+        grepInvert: environment.deviceName ? [GOOGLE_TAG, DESKTOP_ONLY_TAG] : GOOGLE_TAG,
+      };
       if (environment.deviceName) {
         return [websiteProject];
       }
       return [
         websiteProject,
-        { name: `${name}-google`, testDir: UI_TEST_DIR, use, grep: GOOGLE_TAG, workers: 1, retries: 1 },
+        {
+          name: `${name}-google`,
+          testDir: UI_TEST_DIR,
+          use,
+          grep: GOOGLE_TAG,
+          workers: 1,
+          retries: 1,
+        },
       ];
     });
     return environment.deviceName ? uiProjects : [...uiProjects, PlaywrightFactory.createApiProject()];
