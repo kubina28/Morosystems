@@ -201,7 +201,7 @@ as the specification, so differences fail the tests and are reported as bugs.
 - `CreateTask_ValidText_TaskIsListed`
 - `CreateTask_MissingText_ReturnsUnprocessableEntity` – 422 with a validation message
 - `CreateTask_NumericText_ReturnsUnprocessableEntity` – expects 422 as `text` is a string in the API
-  documentation, fails (see BUG-003)
+  documentation, marked as an expected failure (see BUG-003)
 
 **`tests/api/tasks/UpdateTaskTests.spec.ts`** – `@regression @api`
 
@@ -215,8 +215,8 @@ The API has no `PUT` endpoint (see the [API specification review](docs/api-revie
 
 - `DeleteTask_ExistingTask_ReturnsOk`
 - `DeleteTask_ExistingTask_TaskIsNotListed`
-- `DeleteTask_UnknownId_ReturnsBadRequest` – expects 400 as specified by the API documentation, fails
-  (see BUG-002)
+- `DeleteTask_UnknownId_ReturnsBadRequest` – expects 400 as specified by the API documentation, marked as an
+  expected failure (see BUG-002)
 
 ## Known issues
 

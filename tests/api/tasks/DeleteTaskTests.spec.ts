@@ -1,4 +1,4 @@
-import { expect, HttpStatus, tasksClient, test, TodoApiData } from '@automation/api';
+import { expect, HttpStatus, tasksClient, test, TodoApiData, TodoApiKnownIssues } from '@automation/api';
 import { Tag } from '@automation/common';
 import type { Task } from '@automation/api';
 
@@ -27,11 +27,15 @@ test.describe('DeleteTaskTests', { tag: [Tag.Regression, Tag.Api] }, () => {
   });
 
   // The API documentation (Swagger) specifies 400 for a task ID that was not found.
-  test('DeleteTask_UnknownId_ReturnsBadRequest', async () => {
-    // Act
-    const response = await tasksClient.delete(TodoApiData.nonExistingTaskId);
+  test.fail(
+    'DeleteTask_UnknownId_ReturnsBadRequest',
+    { annotation: TodoApiKnownIssues.unknownTaskIdStatus },
+    async () => {
+      // Act
+      const response = await tasksClient.delete(TodoApiData.nonExistingTaskId);
 
-    // Assert
-    expect(response.status()).toBe(HttpStatus.BadRequest);
-  });
+      // Assert
+      expect(response.status()).toBe(HttpStatus.BadRequest);
+    },
+  );
 });

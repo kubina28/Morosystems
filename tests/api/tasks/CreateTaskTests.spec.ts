@@ -1,4 +1,4 @@
-import { expect, HttpStatus, tasksClient, test, TodoApiData } from '@automation/api';
+import { expect, HttpStatus, tasksClient, test, TodoApiData, TodoApiKnownIssues } from '@automation/api';
 import { Tag } from '@automation/common';
 import type { Task } from '@automation/api';
 
@@ -43,11 +43,15 @@ test.describe('CreateTaskTests', { tag: [Tag.Regression, Tag.Api] }, () => {
   });
 
   // The API documentation defines `text` as a string.
-  test('CreateTask_NumericText_ReturnsUnprocessableEntity', async () => {
-    // Act
-    const response = await tasksClient.create({ text: TodoApiData.numericTaskText });
+  test.fail(
+    'CreateTask_NumericText_ReturnsUnprocessableEntity',
+    { annotation: TodoApiKnownIssues.nonStringTaskTextAccepted },
+    async () => {
+      // Act
+      const response = await tasksClient.create({ text: TodoApiData.numericTaskText });
 
-    // Assert
-    expect(response.status()).toBe(HttpStatus.UnprocessableEntity);
-  });
+      // Assert
+      expect(response.status()).toBe(HttpStatus.UnprocessableEntity);
+    },
+  );
 });

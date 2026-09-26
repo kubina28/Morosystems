@@ -1,4 +1,5 @@
 export * from './clients/tasks.client';
+export * from './constants/known-issues';
 export * from './constants/routes';
 export * from './constants/test-data';
 export * from './enums/http-status.enum';

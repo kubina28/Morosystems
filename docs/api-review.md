@@ -23,7 +23,9 @@ and the difference is reported as a bug instead of adapting the test to the curr
 ## Impact on test automation
 
 - **Tests follow the documentation.** `DeleteTask_UnknownId_ReturnsBadRequest` and
-  `CreateTask_NumericText_ReturnsUnprocessableEntity` fail until BUG-002 and BUG-003 are resolved.
+  `CreateTask_NumericText_ReturnsUnprocessableEntity` are marked as expected failures (`test.fail`) with a link
+  to BUG-002 and BUG-003. They keep running, so the suite stays green while the defects exist and turns red once
+  a defect is fixed - a reminder to remove the mark.
 - **No client generated from the OpenAPI specification.** The specification does not match the implementation;
   a generated client would carry these errors into the tests. Generating types from the specification makes sense
   once the findings above are resolved.
