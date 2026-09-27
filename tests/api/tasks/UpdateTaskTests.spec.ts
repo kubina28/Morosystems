@@ -1,6 +1,5 @@
 import { expect, HttpStatus, tasksClient, test, TodoApiData } from '@automation/api';
 import { Tag } from '@automation/common';
-import type { Task } from '@automation/api';
 
 test.describe('UpdateTaskTests', { tag: [Tag.Regression, Tag.Api] }, () => {
   test('UpdateTask_ValidText_ReturnsOkWithUpdatedTask', async () => {
@@ -23,7 +22,7 @@ test.describe('UpdateTaskTests', { tag: [Tag.Regression, Tag.Api] }, () => {
     await tasksClient.updateText(createdTask.id, { text: TodoApiData.updatedTaskText });
 
     // Assert
-    const tasks = (await (await tasksClient.getAll()).json()) as Task[];
+    const tasks = await tasksClient.getAllTasks();
     expect(tasks).toContainEqual({ ...createdTask, text: TodoApiData.updatedTaskText });
   });
 

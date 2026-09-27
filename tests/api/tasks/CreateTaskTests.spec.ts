@@ -27,7 +27,7 @@ test.describe('CreateTaskTests', { tag: [Tag.Regression, Tag.Api] }, () => {
     const createdTask = await tasksClient.createTask(TodoApiData.newTaskText);
 
     // Act
-    const tasks = (await (await tasksClient.getAll()).json()) as Task[];
+    const tasks = await tasksClient.getAllTasks();
 
     // Assert
     expect(tasks).toContainEqual(createdTask);
@@ -42,7 +42,6 @@ test.describe('CreateTaskTests', { tag: [Tag.Regression, Tag.Api] }, () => {
     expect(await response.text()).toContain("'text' field must be present");
   });
 
-  // The API documentation defines `text` as a string.
   test.fail(
     'CreateTask_NumericText_ReturnsUnprocessableEntity',
     { annotation: TodoApiKnownIssues.nonStringTaskTextAccepted },

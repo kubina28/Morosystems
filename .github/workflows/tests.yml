@@ -1,0 +1,128 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, 'ci/**']
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 5 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      update-snapshots:
+        description: Re-create visual baselines that differ and publish them as an artifact
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: 24
+
+jobs:
+  quality:
+    name: Quality checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run format:check
+
+  api-tests:
+    name: API tests (${{ matrix.environment }})
+    needs: quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        environment: [prod]
+    env:
+      TEST_ENV: ${{ matrix.environment }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - name: Start Todo API
+        run: |
+          npm run api:setup
+          npm run api:start &
+          timeout 60 bash -c 'until curl --silent --fail --output /dev/null http://localhost:8080/tasks; do sleep 2; done'
+      - name: Run API tests
+        run: npm run test:api
+      - name: Upload report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: report-api-${{ matrix.environment }}
+          path: reports/
+          retention-days: 14
+
+  ui-tests:
+    name: UI tests (${{ matrix.name }})
+    needs: quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: prod
+            environment: prod
+            filter: --grep-invert @google
+            headless: true
+          - name: prod-mobile
+            environment: prod-mobile
+            filter: --grep-invert @google
+            headless: true
+          - name: google
+            environment: prod
+            filter: --grep @google
+            headless: false
+    env:
+      TEST_ENV: ${{ matrix.environment }}
+      HEADLESS: ${{ matrix.headless }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run UI tests
+        run: xvfb-run --auto-servernum npx playwright test tests/ui ${{ matrix.filter }} ${{ inputs.update-snapshots && '--update-snapshots=changed' || '' }}
+      - name: Collect new visual baselines
+        if: ${{ !cancelled() }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/baselines"
+          git ls-files -z --others --modified --exclude-standard src/ui/data/baselines |
+            xargs -0 -r cp --parents -t "$RUNNER_TEMP/baselines"
+      - name: Upload new visual baselines
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: visual-baselines-${{ matrix.name }}
+          path: ${{ runner.temp }}/baselines/
+          if-no-files-found: ignore
+      - name: Upload report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: report-ui-${{ matrix.name }}
+          path: reports/
+          retention-days: 14

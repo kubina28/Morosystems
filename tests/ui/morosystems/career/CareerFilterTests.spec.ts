@@ -1,13 +1,19 @@
-import { careerPage, City, expect, MorosystemsColors, test } from '@automation/ui';
+import {
+  careerPage,
+  City,
+  expect,
+  findCityWithoutJobPositionsOrSkip,
+  findSecondaryLocationOrSkip,
+  MorosystemsColors,
+  test,
+} from '@automation/ui';
 import { enumKeyOf, Tag } from '@automation/common';
 
-const defaultCity = City.Brno;
+const headquartersCity = City.Brno;
 const alternativeCity = City.Prague;
-const defaultCityKey = enumKeyOf(City, defaultCity);
+const headquartersCityKey = enumKeyOf(City, headquartersCity);
 const alternativeCityKey = enumKeyOf(City, alternativeCity);
-const representativeCities = [City.HradecKralove, alternativeCity];
 
-// Open job positions change over time, so results are validated against the rendered ones, not a fixed list.
 test.describe('CareerFilterTests', { tag: [Tag.Regression, Tag.Career] }, () => {
   test.beforeEach(async () => {
     // Arrange
@@ -24,15 +30,15 @@ test.describe('CareerFilterTests', { tag: [Tag.Regression, Tag.Career] }, () => 
     expect(optionLabels).toEqual(Object.values(City));
   });
 
-  test(`CareerFilter_Select${defaultCityKey}_OnlyJobPositionsIn${defaultCityKey}AreDisplayed`, async () => {
+  test(`CareerFilter_Select${headquartersCityKey}_OnlyJobPositionsIn${headquartersCityKey}AreDisplayed`, async () => {
     // Arrange
     const allJobPositions = await careerPage.getAllJobPositions();
     const expectedJobPositions = allJobPositions.filter((jobPosition) =>
-      jobPosition.locations.includes(defaultCity),
+      jobPosition.locations.includes(headquartersCity),
     );
 
     // Act
-    await careerPage.filterByCity(defaultCity);
+    await careerPage.filterByCity(headquartersCity);
 
     // Assert
     const visibleJobPositions = await careerPage.getVisibleJobPositions();
@@ -41,11 +47,11 @@ test.describe('CareerFilterTests', { tag: [Tag.Regression, Tag.Career] }, () => 
   });
 
   test(
-    `CareerFilter_HoverJobPositionIn${defaultCityKey}_JobPositionIsHighlighted`,
+    `CareerFilter_HoverJobPositionIn${headquartersCityKey}_JobPositionIsHighlighted`,
     { tag: [Tag.DesktopOnly] },
     async () => {
       // Arrange
-      await careerPage.filterByCity(defaultCity);
+      await careerPage.filterByCity(headquartersCity);
       const jobPosition = careerPage.visibleJobPositionLinks.first();
       await expect(jobPosition).toHaveCSS('color', MorosystemsColors.navy);
 
@@ -57,31 +63,40 @@ test.describe('CareerFilterTests', { tag: [Tag.Regression, Tag.Career] }, () => 
     },
   );
 
-  for (const city of representativeCities) {
-    const cityKey = enumKeyOf(City, city);
+  test('CareerFilter_SelectSecondaryLocation_JobPositionsWithThatLocationAreDisplayed', async () => {
+    // Arrange
+    const allJobPositions = await careerPage.getAllJobPositions();
+    const secondaryLocation = findSecondaryLocationOrSkip(allJobPositions);
+    const expectedJobPositions = allJobPositions.filter((jobPosition) =>
+      jobPosition.locations.includes(secondaryLocation),
+    );
 
-    test(`CareerFilter_Select${cityKey}_OnlyJobPositionsIn${cityKey}AreDisplayed`, async () => {
-      // Arrange
-      const allJobPositions = await careerPage.getAllJobPositions();
-      const expectedJobPositions = allJobPositions.filter((jobPosition) =>
-        jobPosition.locations.includes(city),
-      );
+    // Act
+    await careerPage.filterByCity(secondaryLocation);
 
-      // Act
-      await careerPage.filterByCity(city);
+    // Assert
+    expect(await careerPage.getVisibleJobPositions()).toEqual(expectedJobPositions);
+  });
 
-      // Assert
-      expect(await careerPage.getVisibleJobPositions()).toEqual(expectedJobPositions);
-    });
-  }
+  test('CareerFilter_SelectCityWithoutJobPositions_NoJobPositionIsDisplayed', async () => {
+    // Arrange
+    const allJobPositions = await careerPage.getAllJobPositions();
+    const cityWithoutJobPositions = findCityWithoutJobPositionsOrSkip(allJobPositions);
 
-  test(`CareerFilter_Select${alternativeCityKey}After${defaultCityKey}_Only${alternativeCityKey}IsSelected`, async () => {
+    // Act
+    await careerPage.filterByCity(cityWithoutJobPositions);
+
+    // Assert
+    expect(await careerPage.getVisibleJobPositions()).toEqual([]);
+  });
+
+  test(`CareerFilter_Select${alternativeCityKey}After${headquartersCityKey}_Only${alternativeCityKey}IsSelected`, async () => {
     // Arrange
     const allJobPositions = await careerPage.getAllJobPositions();
     const expectedJobPositions = allJobPositions.filter((jobPosition) =>
       jobPosition.locations.includes(alternativeCity),
     );
-    await careerPage.filterByCity(defaultCity);
+    await careerPage.filterByCity(headquartersCity);
 
     // Act
     await careerPage.filterByCity(alternativeCity);
@@ -95,7 +110,7 @@ test.describe('CareerFilterTests', { tag: [Tag.Regression, Tag.Career] }, () => 
   test('CareerFilter_ResetToAllCities_AllJobPositionsAreDisplayed', async () => {
     // Arrange
     const allJobPositions = await careerPage.getAllJobPositions();
-    await careerPage.filterByCity(defaultCity);
+    await careerPage.filterByCity(headquartersCity);
 
     // Act
     await careerPage.filterByCity(City.AllCities);
@@ -128,13 +143,13 @@ test.describe('CareerFilterTests', { tag: [Tag.Regression, Tag.Career] }, () => 
     expect(await careerPage.getVisibleJobPositions()).toEqual(allJobPositions);
   });
 
-  test(`CareerFilter_CheckGraduatesWith${defaultCityKey}Selected_OnlyGraduateJobPositionsIn${defaultCityKey}AreDisplayed`, async () => {
+  test(`CareerFilter_CheckGraduatesWith${headquartersCityKey}Selected_OnlyGraduateJobPositionsIn${headquartersCityKey}AreDisplayed`, async () => {
     // Arrange
     const allJobPositions = await careerPage.getAllJobPositions();
     const expectedJobPositions = allJobPositions.filter(
-      (jobPosition) => jobPosition.suitableForGraduates && jobPosition.locations.includes(defaultCity),
+      (jobPosition) => jobPosition.suitableForGraduates && jobPosition.locations.includes(headquartersCity),
     );
-    await careerPage.filterByCity(defaultCity);
+    await careerPage.filterByCity(headquartersCity);
 
     // Act
     await careerPage.showOnlyGraduateJobPositions(true);

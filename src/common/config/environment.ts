@@ -40,7 +40,6 @@ export const environment = Object.freeze({
     ? undefined
     : { width: requiredNumber('VIEWPORT_WIDTH'), height: requiredNumber('VIEWPORT_HEIGHT') },
   isCi: Boolean(process.env.CI),
-  // Google blocks headless browsers with a CAPTCHA, therefore tests run headed unless HEADLESS=true.
   headless: process.env.HEADLESS === 'true',
   browserNames: (process.env.BROWSERS ?? 'chromium').split(',').map((browser) => browser.trim()),
   workerCount: process.env.WORKERS ? Number(process.env.WORKERS) : undefined,

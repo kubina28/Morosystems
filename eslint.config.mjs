@@ -15,13 +15,25 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/explicit-function-return-type': ['error', { allowExpressions: true }],
+      '@typescript-eslint/member-ordering': [
+        'error',
+        {
+          default: [
+            'field',
+            'constructor',
+            ['get', 'set'],
+            'public-method',
+            'protected-method',
+            'private-method',
+          ],
+        },
+      ],
     },
   },
   {
     files: ['src/**/*.ts', 'tests/**/*.ts'],
     plugins: { 'import-x': importX },
     rules: {
-      // Projects may import only projects declared in their own package.json - like project references in .NET.
       'import-x/no-extraneous-dependencies': 'error',
       'no-restricted-imports': ['error', { patterns: ['@automation/*/*'] }],
     },
@@ -29,6 +41,10 @@ export default tseslint.config(
   {
     files: ['tests/**/*.ts'],
     ...playwright.configs['flat/recommended'],
+    rules: {
+      ...playwright.configs['flat/recommended'].rules,
+      'playwright/no-skipped-test': ['warn', { allowConditional: true }],
+    },
   },
   {
     files: ['eslint.config.mjs'],

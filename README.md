@@ -24,6 +24,9 @@ npm run api:start     # starts the backend on http://localhost:8080 – keep it 
 npm test
 ```
 
+Visual baselines are committed for Windows and Linux. On macOS the first run creates them and reports
+`MainMenu_ClickCareer_CareerPageIsOpened` as failed, the next run compares against them (see _Visual testing_).
+
 After a run, open the HTML report:
 
 ```bash
@@ -68,7 +71,7 @@ from the comparison. Homepages are not compared visually – they are marketing 
 | `MainMenu_ClickCareer_CareerPageIsOpened` | `career-page` | layout of the whole _Kariéra_ page on desktop and mobile |
 
 `expectVisualMatch()` (`src/common`) is added as the last assertion of the existing test (no separate visual test) and
-compares a page (full page) or a component (locator) with a baseline using Playwright `toHaveScreenshot`. The test
+compares the full page with a baseline using Playwright `toHaveScreenshot`. The test
 runs in the desktop and the mobile configuration, so the same assertion covers both layouts.
 
 Visual changes of a component state are verified by its style instead of a screenshot – e.g.
@@ -77,10 +80,14 @@ position texts.
 
 - **Baselines** are test data of the UI project, stored in `src/ui/data/baselines/<environment>/<project>/<platform>/`,
   so desktop, mobile, browsers and operating systems do not share images. Rendering differs between Windows and Linux,
-  so a CI run needs baselines created on its own platform.
+  so a CI run needs baselines created on its own platform (see _Continuous integration_).
 - **Dynamic content** managed in the CMS is excluded, the layout of the page is still compared (`dynamicContent` of
   page objects): photos, video and iframes are hidden (their space is kept), content whose amount varies (open
-  positions, team carousel, quotes, case studies) is removed, so the page height does not depend on it.
+  positions, team carousel, quotes, case studies) is removed, so the page height does not depend on it. A stylesheet
+  excludes the content, so it also applies to elements that scripts show later (the Cookie-Script settings badge).
+- **Delayed scripts** – the website loads its scripts on the first user interaction (WP Rocket, see BUG-001) and
+  renders parts of the page differently before. The test presses a key before the comparison, so the page is
+  compared in the state a user sees.
 - **Stable capture** – the comparison waits for the page load and web fonts, scrolls the page to the top (a fixed
   header would otherwise appear twice) and hides scrollbars (classic Windows scrollbars change the image width).
 - **Intended design change** – run `npm run test:update-snapshots`, review the new images and commit them.
@@ -128,9 +135,9 @@ cover the functionality**:
 - **Not reusable across configurations** – the journey depends on Google and therefore does not run on mobile.
 
 The same functionality is therefore also covered by isolated tests, **one behaviour per test**, each starting
-directly on the page it tests: `SearchTests` (Google search), `MainMenuTests` (navigation), `CareerFilterTests` (the
+directly on the page it tests: `GoogleSearchTests` (Google search), `MainMenuTests` (navigation), `CareerFilterTests` (the
 positions filter) and `LanguageVersionTests`. They run independently of each other and of Google (except
-`SearchTests`), and on mobile as well.
+`GoogleSearchTests`), and on mobile as well.
 
 **`tests/ui/e2e/UserJourneyTests.spec.ts`** – `@smoke @e2e @google`
 
@@ -138,7 +145,7 @@ positions filter) and `LanguageVersionTests`. They run independently of each oth
   as one user journey (steps 1–7), including the validation of the search results content (the MoroSystems result
   with the `morosystems.cz` domain)
 
-**`tests/ui/google/search/SearchTests.spec.ts`** – `@regression @google`
+**`tests/ui/google/search/GoogleSearchTests.spec.ts`** – `@regression @google`
 
 - `GoogleSearch_SearchMoroSystems_ResultsPageIsOpened` – URL, title, search box value, results
 - `GoogleSearch_SearchMoroSystems_MoroSystemsWebsiteIsListed` – result title and domain
@@ -147,14 +154,17 @@ positions filter) and `LanguageVersionTests`. They run independently of each oth
 **`tests/ui/morosystems/career/CareerFilterTests.spec.ts`** – `@regression @career`
 
 Exhaustive testing of all filter combinations is not possible, so cities are chosen by equivalence partitioning –
-one representative per class of filter behaviour.
+one representative per class of filter behaviour. Classes that depend on the currently open job positions pick their
+city from the rendered positions, so they keep covering their class when the positions change. A class missing in
+the current data skips the test with the reason in the report.
 
 - `CareerFilter_OpenCitySelect_AllCitiesAreOfferedWithAllCitiesSelected`
 - `CareerFilter_SelectBrno_OnlyJobPositionsInBrnoAreDisplayed` – city with positions: at least one position, exactly those
   located in Brno
-- `CareerFilter_SelectHradecKralove_OnlyJobPositionsInHradecKraloveAreDisplayed` – city listed as one of several locations
-  of a position
-- `CareerFilter_SelectPrague_OnlyJobPositionsInPragueAreDisplayed` – city without positions (on production)
+- `CareerFilter_SelectSecondaryLocation_JobPositionsWithThatLocationAreDisplayed` – a city listed after the first
+  location of a position (e.g. Brno, **Hradec Králové**): a filter matching only the first location would miss it
+- `CareerFilter_SelectCityWithoutJobPositions_NoJobPositionIsDisplayed` – a city without open positions, the list is
+  empty
 - `CareerFilter_SelectPragueAfterBrno_OnlyPragueIsSelected` – only one city can be selected, a new selection replaces
   the previous one
 - `CareerFilter_ResetToAllCities_AllJobPositionsAreDisplayed`
@@ -245,9 +255,11 @@ Findings outside the tested scenarios that are worth a look, but are not reporte
 ## Project structure
 
 ```
+├── .github/workflows/tests.yml   CI pipeline – quality checks, API and UI tests (see Continuous integration)
 ├── package.json                  solution: npm workspaces (src/*, tests/*), shared tooling and scripts
 ├── tsconfig.base.json            TypeScript settings shared by all projects
 ├── playwright.config.ts          runner settings only (reporters, timeouts, projects from the factory)
+├── docs/                         API specification review, bug reports
 ├── setup/
 │   └── environments/             prod.env (desktop), prod-mobile.env (Pixel 7) – URLs, locale, screen, workers
 ├── src/
@@ -264,10 +276,10 @@ Findings outside the tested scenarios that are worth a look, but are not reporte
 │   │   ├── fixtures/             page objects declared per website, auto fixtures (setup, consent, console log)
 │   │   ├── models/               JobPosition
 │   │   ├── pom/                  BasePage, components (header, city select, language switcher, cookie dialogs), pages
-│   │   └── utils/                Google CAPTCHA guard
+│   │   └── utils/                Google CAPTCHA guard, cities picked by equivalence class from job positions
 │   └── api/                      project @automation/api – API tests support
 │       ├── clients/              TasksClient – the API counterpart of page objects
-│       ├── constants/            Todo API routes and test data
+│       ├── constants/            Todo API routes, test data, known issues linked from tests
 │       ├── enums/                HTTP statuses
 │       ├── fixtures/             API client and cleanup of created tasks
 │       └── models/               Task
@@ -314,6 +326,35 @@ Each run produces:
 - **JUnit XML** – `reports/junit/results.xml` for CI integration
 - **Console output** – `list` reporter
 
+## Continuous integration
+
+The GitHub Actions workflow [`.github/workflows/tests.yml`](.github/workflows/tests.yml) runs on GitHub-hosted Linux
+runners on every push to `main`, on pull requests, on working days at 5:00 UTC (the tested website changes
+independently of this repository) and on demand.
+
+| Job                      | What it does                                                                  |
+| ------------------------ | ----------------------------------------------------------------------------- |
+| `Quality checks`         | typecheck, lint, format check                                                 |
+| `API tests (prod)`       | clones and starts `todo-be`, runs the API tests                               |
+| `UI tests (prod)`        | MoroSystems website tests in the desktop configuration, headless              |
+| `UI tests (prod-mobile)` | MoroSystems website tests in the mobile configuration, headless               |
+| `UI tests (google)`      | Google search tests and the E2E journey, headed on a virtual display (`xvfb`) |
+
+The test jobs start only after the quality checks pass and run in parallel. Each test job is a matrix over the
+environments of `setup/environments`, so another environment is added by one matrix entry. Each job uploads its
+`reports/` folder (HTML report, JUnit XML, traces) as an artifact – open a downloaded HTML report with
+`npx playwright show-report <folder>`. Failures are also annotated on the run summary (`github` reporter) and a failed
+test is retried once, so it is reported as _flaky_.
+
+- **Google tests are best effort on CI.** Google may answer requests from cloud runners (data centre IP addresses)
+  with a CAPTCHA even in a headed browser – the test is then skipped with an annotation, not failed. A reliable run
+  of the Google tests needs a regular network: locally or on a self-hosted runner.
+- **Linux visual baselines.** A run that creates or re-creates a baseline publishes it as the
+  `visual-baselines-<environment>` artifact – extract it into the repository root and commit it. The first run
+  without Linux baselines fails the visual assertion and produces them. After an intended design change, run the
+  workflow manually with _Re-create visual baselines_. The runner image is pinned (`ubuntu-24.04`), as the baselines
+  depend on the rendering of the operating system – re-create them after upgrading it.
+
 ## Google and bot detection
 
 Google protects its search against automated traffic, which is the main source of instability in this assignment.
@@ -327,6 +368,8 @@ The suite handles it as follows:
   because parallel searches from one IP degrade the results. All other tests run fully parallel.
 - **One retry for Google tests.** Google occasionally returns a results page without the organic MoroSystems
   homepage result. A retried test is reported as _flaky_, so it stays visible.
+- **Czech results everywhere.** Google localises results by the location of the IP address, so the homepage URL
+  carries `gl=cz` – a CI runner in the USA gets the same results as a user in the Czech Republic.
 - **Consent dialogs.** Google's consent dialog is accepted by a Playwright locator handler whenever it appears.
   The MoroSystems Cookie-Script dialog slides in several seconds after page load at an unpredictable moment,
   so the consent ("necessary cookies only") is stored as a cookie in advance and the dialog never interrupts a test.

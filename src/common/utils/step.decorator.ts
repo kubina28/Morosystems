@@ -12,7 +12,6 @@ export function step<This extends object, Args extends unknown[], Return>(name?:
         typeof name === 'function'
           ? name(...args)
           : (name ?? `${this.constructor.name}.${String(context.name)}`);
-      // `box` reports a failure at the call site in the test instead of inside the page object.
       return test.step(title, () => target.call(this, ...args), { box: true });
     };
   };

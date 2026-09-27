@@ -1,6 +1,6 @@
 import { test as base, type Page } from '@playwright/test';
 import { GoogleConsentDialog } from '../pom/components/google/google-consent.dialog';
-import { MoroCookieDialog } from '../pom/components/morosystems/moro-cookie.dialog';
+import { MorosystemsCookieDialog } from '../pom/components/morosystems/morosystems-cookie.dialog';
 import { initGooglePages } from './google.pages';
 import { initMorosystemsPages } from './morosystems.pages';
 
@@ -29,7 +29,7 @@ export const test = base.extend<AutoFixtures>({
   consentDialogs: [
     async ({ page }, use) => {
       await new GoogleConsentDialog(page).acceptWhenDisplayed();
-      await new MoroCookieDialog(page).storeRejectedConsent();
+      await new MorosystemsCookieDialog(page).storeRejectedConsent();
       await use();
     },
     { auto: true },

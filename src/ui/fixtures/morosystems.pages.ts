@@ -1,11 +1,11 @@
 import type { Page } from '@playwright/test';
 import { CareerPage } from '../pom/pages/morosystems/career.page';
-import { MoroHomePage } from '../pom/pages/morosystems/moro-home.page';
+import { MorosystemsHomePage } from '../pom/pages/morosystems/morosystems-home.page';
 
-export let moroHomePage: MoroHomePage;
+export let morosystemsHomePage: MorosystemsHomePage;
 export let careerPage: CareerPage;
 
 export function initMorosystemsPages(page: Page): void {
-  moroHomePage = new MoroHomePage(page);
+  morosystemsHomePage = new MorosystemsHomePage(page);
   careerPage = new CareerPage(page);
 }

@@ -40,8 +40,6 @@ export class PlaywrightFactory {
     };
   }
 
-  // Google tests run one at a time - parallel searches from one IP make Google degrade results or show a CAPTCHA.
-  // The retry covers results pages occasionally missing the organic homepage result.
   static createProjects(): Project[] {
     const uiProjects = environment.browserNames.flatMap((name) => {
       // Project options override the global `use`, so the desktop preset viewport must be replaced here.

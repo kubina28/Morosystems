@@ -4,7 +4,7 @@ import { Language } from '../../../enums/language.enum';
 import { step } from '@automation/common';
 import { LanguageSwitcher } from './language-switcher.component';
 
-export class MoroHeader {
+export class MorosystemsHeader {
   readonly root: Locator;
   readonly careerLink: Locator;
   readonly aboutUsSubmenuToggle: Locator;
@@ -24,7 +24,6 @@ export class MoroHeader {
     await this.languageSwitcher.switchTo(language);
   }
 
-  // Responsive menu: "Kariéra" is top level from ~1920 px, in the "O nás" submenu below, behind the burger on mobile.
   @step('Navigate to "Kariéra" page via main menu')
   async goToCareer(): Promise<void> {
     await expect(
