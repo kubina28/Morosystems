@@ -12,6 +12,7 @@ export default defineConfig({
   workers: environment.workerCount,
   reporter: [
     ['list'],
+    ...(environment.isCi ? [['github'] as const] : []),
     ['html', { outputFolder: './reports/html', open: 'never' }],
     ['junit', { outputFile: './reports/junit/results.xml' }],
   ],

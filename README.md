@@ -77,7 +77,7 @@ position texts.
 
 - **Baselines** are test data of the UI project, stored in `src/ui/data/baselines/<environment>/<project>/<platform>/`,
   so desktop, mobile, browsers and operating systems do not share images. Rendering differs between Windows and Linux,
-  so a CI run needs baselines created on its own platform.
+  so a CI run needs baselines created on its own platform (see _Continuous integration_).
 - **Dynamic content** managed in the CMS is excluded, the layout of the page is still compared (`dynamicContent` of
   page objects): photos, video and iframes are hidden (their space is kept), content whose amount varies (open
   positions, team carousel, quotes, case studies) is removed, so the page height does not depend on it.
@@ -313,6 +313,33 @@ Each run produces:
   a screenshot, video, trace and the browser console log (errors and warnings)
 - **JUnit XML** – `reports/junit/results.xml` for CI integration
 - **Console output** – `list` reporter
+
+## Continuous integration
+
+The GitHub Actions workflow [`.github/workflows/tests.yml`](.github/workflows/tests.yml) runs on GitHub-hosted Linux
+runners on every push to `main`, on pull requests, on working days at 5:00 UTC (the tested website changes
+independently of this repository) and on demand.
+
+| Job                      | What it does                                                                  |
+| ------------------------ | ----------------------------------------------------------------------------- |
+| `Quality checks`         | typecheck, lint, format check                                                 |
+| `API tests`              | clones and starts `todo-be`, runs the API tests                               |
+| `UI tests (prod)`        | MoroSystems website tests in the desktop configuration, headless              |
+| `UI tests (prod-mobile)` | MoroSystems website tests in the mobile configuration, headless               |
+| `Google tests`           | Google search tests and the E2E journey, headed on a virtual display (`xvfb`) |
+
+The test jobs start only after the quality checks pass and run in parallel. Each job uploads its `reports/` folder
+(HTML report, JUnit XML, traces) as an artifact – open a downloaded HTML report with
+`npx playwright show-report <folder>`. Failures are also annotated on the run summary (`github` reporter) and a failed
+test is retried once, so it is reported as _flaky_.
+
+- **Google tests are best effort on CI.** Google often answers requests from cloud runners (data centre IP addresses)
+  with a CAPTCHA even in a headed browser – the test is then skipped with an annotation, not failed. A reliable run
+  of the Google tests needs a regular network: locally or on a self-hosted runner.
+- **Linux visual baselines.** A run that creates or re-creates a baseline publishes it as the
+  `visual-baselines-<environment>` artifact – extract it into the repository root and commit it. The first run
+  without Linux baselines fails the visual assertion and produces them. After an intended design change, run the
+  workflow manually with _Re-create visual baselines_.
 
 ## Google and bot detection
 
