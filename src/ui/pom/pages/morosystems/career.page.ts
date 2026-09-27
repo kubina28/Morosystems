@@ -48,7 +48,6 @@ export class CareerPage extends MorosystemsBasePage {
     (enabled: boolean) => `${enabled ? 'Show' : 'Stop showing'} only job positions suitable for graduates`,
   )
   async showOnlyGraduateJobPositions(enabled: boolean): Promise<void> {
-    // The native checkbox is moved off-screen by CSS, users click its label.
     if ((await this.graduateJobPositionsCheckbox.isChecked()) !== enabled) {
       await this.graduateJobPositionsLabel.click();
     }

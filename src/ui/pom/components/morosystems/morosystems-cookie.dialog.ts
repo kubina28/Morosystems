@@ -1,8 +1,6 @@
 import type { Page } from '@playwright/test';
 import { MorosystemsLanguageBaseUrls } from '../../../constants/routes';
 
-// The dialog is loaded lazily and slides in at an unpredictable moment of the test,
-// so the consent is stored in advance instead of clicking the dialog away.
 export class MorosystemsCookieDialog {
   private static readonly consentCookieName = 'CookieScriptConsent';
 

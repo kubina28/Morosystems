@@ -4,4 +4,5 @@ export * from './constants/test-data';
 export * from './enums/city.enum';
 export * from './enums/language.enum';
 export * from './fixtures/pages.fixture';
+export * from './utils/job-position.utils';
 export type * from './models/job-position.model';

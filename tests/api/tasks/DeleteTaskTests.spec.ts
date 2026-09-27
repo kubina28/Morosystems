@@ -25,7 +25,6 @@ test.describe('DeleteTaskTests', { tag: [Tag.Regression, Tag.Api] }, () => {
     expect(tasks.map((task) => task.id)).not.toContain(createdTask.id);
   });
 
-  // The API documentation (Swagger) specifies 400 for a task ID that was not found.
   test.fail(
     'DeleteTask_UnknownId_ReturnsBadRequest',
     { annotation: TodoApiKnownIssues.unknownTaskIdStatus },

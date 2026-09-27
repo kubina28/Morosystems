@@ -24,7 +24,6 @@ export class MorosystemsHeader {
     await this.languageSwitcher.switchTo(language);
   }
 
-  // Responsive menu: "Kariéra" is top level from ~1920 px, in the "O nás" submenu below, behind the burger on mobile.
   @step('Navigate to "Kariéra" page via main menu')
   async goToCareer(): Promise<void> {
     await expect(

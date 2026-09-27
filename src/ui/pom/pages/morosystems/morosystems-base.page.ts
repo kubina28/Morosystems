@@ -22,8 +22,6 @@ export abstract class MorosystemsBasePage extends BasePage {
     };
   }
 
-  // WP Rocket loads the website scripts on the first user interaction and the page renders differently before
-  // (see BUG-001), so a key press brings the page to the state a user sees.
   @step('Load website scripts delayed until the first user interaction')
   async loadDelayedScripts(): Promise<void> {
     await this.page.keyboard.press('Shift');

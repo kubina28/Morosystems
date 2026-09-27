@@ -1,13 +1,19 @@
-import { careerPage, City, expect, MorosystemsColors, test } from '@automation/ui';
+import {
+  careerPage,
+  City,
+  expect,
+  findCityWithoutJobPositionsOrSkip,
+  findSecondaryLocationOrSkip,
+  MorosystemsColors,
+  test,
+} from '@automation/ui';
 import { enumKeyOf, Tag } from '@automation/common';
 
 const headquartersCity = City.Brno;
 const alternativeCity = City.Prague;
 const headquartersCityKey = enumKeyOf(City, headquartersCity);
 const alternativeCityKey = enumKeyOf(City, alternativeCity);
-const representativeCities = [City.HradecKralove, alternativeCity];
 
-// Open job positions change over time, so results are validated against the rendered ones, not a fixed list.
 test.describe('CareerFilterTests', { tag: [Tag.Regression, Tag.Career] }, () => {
   test.beforeEach(async () => {
     // Arrange
@@ -57,23 +63,32 @@ test.describe('CareerFilterTests', { tag: [Tag.Regression, Tag.Career] }, () => 
     },
   );
 
-  for (const city of representativeCities) {
-    const cityKey = enumKeyOf(City, city);
+  test('CareerFilter_SelectSecondaryLocation_JobPositionsWithThatLocationAreDisplayed', async () => {
+    // Arrange
+    const allJobPositions = await careerPage.getAllJobPositions();
+    const secondaryLocation = findSecondaryLocationOrSkip(allJobPositions);
+    const expectedJobPositions = allJobPositions.filter((jobPosition) =>
+      jobPosition.locations.includes(secondaryLocation),
+    );
 
-    test(`CareerFilter_Select${cityKey}_OnlyJobPositionsIn${cityKey}AreDisplayed`, async () => {
-      // Arrange
-      const allJobPositions = await careerPage.getAllJobPositions();
-      const expectedJobPositions = allJobPositions.filter((jobPosition) =>
-        jobPosition.locations.includes(city),
-      );
+    // Act
+    await careerPage.filterByCity(secondaryLocation);
 
-      // Act
-      await careerPage.filterByCity(city);
+    // Assert
+    expect(await careerPage.getVisibleJobPositions()).toEqual(expectedJobPositions);
+  });
 
-      // Assert
-      expect(await careerPage.getVisibleJobPositions()).toEqual(expectedJobPositions);
-    });
-  }
+  test('CareerFilter_SelectCityWithoutJobPositions_NoJobPositionIsDisplayed', async () => {
+    // Arrange
+    const allJobPositions = await careerPage.getAllJobPositions();
+    const cityWithoutJobPositions = findCityWithoutJobPositionsOrSkip(allJobPositions);
+
+    // Act
+    await careerPage.filterByCity(cityWithoutJobPositions);
+
+    // Assert
+    expect(await careerPage.getVisibleJobPositions()).toEqual([]);
+  });
 
   test(`CareerFilter_Select${alternativeCityKey}After${headquartersCityKey}_Only${alternativeCityKey}IsSelected`, async () => {
     // Arrange

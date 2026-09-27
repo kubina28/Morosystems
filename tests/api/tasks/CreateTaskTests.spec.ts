@@ -42,7 +42,6 @@ test.describe('CreateTaskTests', { tag: [Tag.Regression, Tag.Api] }, () => {
     expect(await response.text()).toContain("'text' field must be present");
   });
 
-  // The API documentation defines `text` as a string.
   test.fail(
     'CreateTask_NumericText_ReturnsUnprocessableEntity',
     { annotation: TodoApiKnownIssues.nonStringTaskTextAccepted },

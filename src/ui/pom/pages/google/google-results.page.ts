@@ -9,7 +9,6 @@ export class GoogleResultsPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    // The results page also contains a hidden input named "q", the combobox role narrows it to the visible box.
     this.searchBox = page.getByRole('combobox').and(page.locator('[name="q"]'));
     this.resultsContainer = page.locator('#rso');
     this.organicResultLinks = this.resultsContainer.locator('a').filter({ has: page.locator('h3') });

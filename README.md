@@ -24,6 +24,9 @@ npm run api:start     # starts the backend on http://localhost:8080 – keep it 
 npm test
 ```
 
+Visual baselines are committed for Windows and Linux. On macOS the first run creates them and reports
+`MainMenu_ClickCareer_CareerPageIsOpened` as failed, the next run compares against them (see _Visual testing_).
+
 After a run, open the HTML report:
 
 ```bash
@@ -151,14 +154,17 @@ positions filter) and `LanguageVersionTests`. They run independently of each oth
 **`tests/ui/morosystems/career/CareerFilterTests.spec.ts`** – `@regression @career`
 
 Exhaustive testing of all filter combinations is not possible, so cities are chosen by equivalence partitioning –
-one representative per class of filter behaviour.
+one representative per class of filter behaviour. Classes that depend on the currently open job positions pick their
+city from the rendered positions, so they keep covering their class when the positions change. A class missing in
+the current data skips the test with the reason in the report.
 
 - `CareerFilter_OpenCitySelect_AllCitiesAreOfferedWithAllCitiesSelected`
 - `CareerFilter_SelectBrno_OnlyJobPositionsInBrnoAreDisplayed` – city with positions: at least one position, exactly those
   located in Brno
-- `CareerFilter_SelectHradecKralove_OnlyJobPositionsInHradecKraloveAreDisplayed` – city listed as one of several locations
-  of a position
-- `CareerFilter_SelectPrague_OnlyJobPositionsInPragueAreDisplayed` – city without positions (on production)
+- `CareerFilter_SelectSecondaryLocation_JobPositionsWithThatLocationAreDisplayed` – a city listed after the first
+  location of a position (e.g. Brno, **Hradec Králové**): a filter matching only the first location would miss it
+- `CareerFilter_SelectCityWithoutJobPositions_NoJobPositionIsDisplayed` – a city without open positions, the list is
+  empty
 - `CareerFilter_SelectPragueAfterBrno_OnlyPragueIsSelected` – only one city can be selected, a new selection replaces
   the previous one
 - `CareerFilter_ResetToAllCities_AllJobPositionsAreDisplayed`
@@ -270,7 +276,7 @@ Findings outside the tested scenarios that are worth a look, but are not reporte
 │   │   ├── fixtures/             page objects declared per website, auto fixtures (setup, consent, console log)
 │   │   ├── models/               JobPosition
 │   │   ├── pom/                  BasePage, components (header, city select, language switcher, cookie dialogs), pages
-│   │   └── utils/                Google CAPTCHA guard
+│   │   └── utils/                Google CAPTCHA guard, cities picked by equivalence class from job positions
 │   └── api/                      project @automation/api – API tests support
 │       ├── clients/              TasksClient – the API counterpart of page objects
 │       ├── constants/            Todo API routes, test data, known issues linked from tests

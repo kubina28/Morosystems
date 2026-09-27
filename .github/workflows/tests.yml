@@ -6,7 +6,6 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    # The tested website changes independently of this repository.
     - cron: '0 5 * * 1-5'
   workflow_dispatch:
     inputs:
@@ -76,7 +75,6 @@ jobs:
   ui-tests:
     name: UI tests (${{ matrix.name }})
     needs: quality
-    # Visual baselines depend on the rendering of the operating system, so the image is pinned in every job.
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
@@ -91,7 +89,6 @@ jobs:
             environment: prod-mobile
             filter: --grep-invert @google
             headless: true
-          # Google serves a CAPTCHA to headless browsers far more often, so its tests run headed on a virtual display.
           - name: google
             environment: prod
             filter: --grep @google
@@ -109,7 +106,6 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Run UI tests
         run: xvfb-run --auto-servernum npx playwright test tests/ui ${{ matrix.filter }} ${{ inputs.update-snapshots && '--update-snapshots=changed' || '' }}
-      # Playwright writes a missing or re-created baseline next to the committed ones; only those are published.
       - name: Collect new visual baselines
         if: ${{ !cancelled() }}
         run: |
