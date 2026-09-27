@@ -339,7 +339,8 @@ test is retried once, so it is reported as _flaky_.
 - **Linux visual baselines.** A run that creates or re-creates a baseline publishes it as the
   `visual-baselines-<environment>` artifact – extract it into the repository root and commit it. The first run
   without Linux baselines fails the visual assertion and produces them. After an intended design change, run the
-  workflow manually with _Re-create visual baselines_.
+  workflow manually with _Re-create visual baselines_. The runner image is pinned (`ubuntu-24.04`), as the baselines
+  depend on the rendering of the operating system – re-create them after upgrading it.
 
 ## Google and bot detection
 
@@ -354,6 +355,8 @@ The suite handles it as follows:
   because parallel searches from one IP degrade the results. All other tests run fully parallel.
 - **One retry for Google tests.** Google occasionally returns a results page without the organic MoroSystems
   homepage result. A retried test is reported as _flaky_, so it stays visible.
+- **Czech results everywhere.** Google localises results by the location of the IP address, so the homepage URL
+  carries `gl=cz` – a CI runner in the USA gets the same results as a user in the Czech Republic.
 - **Consent dialogs.** Google's consent dialog is accepted by a Playwright locator handler whenever it appears.
   The MoroSystems Cookie-Script dialog slides in several seconds after page load at an unpredictable moment,
   so the consent ("necessary cookies only") is stored as a cookie in advance and the dialog never interrupts a test.
