@@ -1,4 +1,4 @@
-import type { APIRequestContext, APIResponse } from '@playwright/test';
+import { expect, type APIRequestContext, type APIResponse } from '@playwright/test';
 import { TodoApiRoutes } from '../constants/routes';
 import type { Task } from '../models/task.model';
 
@@ -11,6 +11,12 @@ export class TasksClient {
     return this.request.get(TodoApiRoutes.tasks);
   }
 
+  async getAllTasks(): Promise<Task[]> {
+    const response = await this.getAll();
+    await expect(response, 'Task list should be returned').toBeOK();
+    return (await response.json()) as Task[];
+  }
+
   async create(payload: object): Promise<APIResponse> {
     const response = await this.request.post(TodoApiRoutes.tasks, { data: payload });
     if (response.ok()) {
@@ -20,7 +26,9 @@ export class TasksClient {
   }
 
   async createTask(text: string): Promise<Task> {
-    return (await (await this.create({ text })).json()) as Task;
+    const response = await this.create({ text });
+    await expect(response, 'Task should be created').toBeOK();
+    return (await response.json()) as Task;
   }
 
   // The API has no PUT endpoint, the task text is updated by POST /tasks/{id}.

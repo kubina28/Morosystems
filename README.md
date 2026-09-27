@@ -68,7 +68,7 @@ from the comparison. Homepages are not compared visually – they are marketing 
 | `MainMenu_ClickCareer_CareerPageIsOpened` | `career-page` | layout of the whole _Kariéra_ page on desktop and mobile |
 
 `expectVisualMatch()` (`src/common`) is added as the last assertion of the existing test (no separate visual test) and
-compares a page (full page) or a component (locator) with a baseline using Playwright `toHaveScreenshot`. The test
+compares the full page with a baseline using Playwright `toHaveScreenshot`. The test
 runs in the desktop and the mobile configuration, so the same assertion covers both layouts.
 
 Visual changes of a component state are verified by its style instead of a screenshot – e.g.
@@ -80,7 +80,11 @@ position texts.
   so a CI run needs baselines created on its own platform (see _Continuous integration_).
 - **Dynamic content** managed in the CMS is excluded, the layout of the page is still compared (`dynamicContent` of
   page objects): photos, video and iframes are hidden (their space is kept), content whose amount varies (open
-  positions, team carousel, quotes, case studies) is removed, so the page height does not depend on it.
+  positions, team carousel, quotes, case studies) is removed, so the page height does not depend on it. A stylesheet
+  excludes the content, so it also applies to elements that scripts show later (the Cookie-Script settings badge).
+- **Delayed scripts** – the website loads its scripts on the first user interaction (WP Rocket, see BUG-001) and
+  renders parts of the page differently before. The test presses a key before the comparison, so the page is
+  compared in the state a user sees.
 - **Stable capture** – the comparison waits for the page load and web fonts, scrolls the page to the top (a fixed
   header would otherwise appear twice) and hides scrollbars (classic Windows scrollbars change the image width).
 - **Intended design change** – run `npm run test:update-snapshots`, review the new images and commit them.
@@ -128,9 +132,9 @@ cover the functionality**:
 - **Not reusable across configurations** – the journey depends on Google and therefore does not run on mobile.
 
 The same functionality is therefore also covered by isolated tests, **one behaviour per test**, each starting
-directly on the page it tests: `SearchTests` (Google search), `MainMenuTests` (navigation), `CareerFilterTests` (the
+directly on the page it tests: `GoogleSearchTests` (Google search), `MainMenuTests` (navigation), `CareerFilterTests` (the
 positions filter) and `LanguageVersionTests`. They run independently of each other and of Google (except
-`SearchTests`), and on mobile as well.
+`GoogleSearchTests`), and on mobile as well.
 
 **`tests/ui/e2e/UserJourneyTests.spec.ts`** – `@smoke @e2e @google`
 
@@ -138,7 +142,7 @@ positions filter) and `LanguageVersionTests`. They run independently of each oth
   as one user journey (steps 1–7), including the validation of the search results content (the MoroSystems result
   with the `morosystems.cz` domain)
 
-**`tests/ui/google/search/SearchTests.spec.ts`** – `@regression @google`
+**`tests/ui/google/search/GoogleSearchTests.spec.ts`** – `@regression @google`
 
 - `GoogleSearch_SearchMoroSystems_ResultsPageIsOpened` – URL, title, search box value, results
 - `GoogleSearch_SearchMoroSystems_MoroSystemsWebsiteIsListed` – result title and domain
@@ -245,9 +249,11 @@ Findings outside the tested scenarios that are worth a look, but are not reporte
 ## Project structure
 
 ```
+├── .github/workflows/tests.yml   CI pipeline – quality checks, API and UI tests (see Continuous integration)
 ├── package.json                  solution: npm workspaces (src/*, tests/*), shared tooling and scripts
 ├── tsconfig.base.json            TypeScript settings shared by all projects
 ├── playwright.config.ts          runner settings only (reporters, timeouts, projects from the factory)
+├── docs/                         API specification review, bug reports
 ├── setup/
 │   └── environments/             prod.env (desktop), prod-mobile.env (Pixel 7) – URLs, locale, screen, workers
 ├── src/
@@ -267,7 +273,7 @@ Findings outside the tested scenarios that are worth a look, but are not reporte
 │   │   └── utils/                Google CAPTCHA guard
 │   └── api/                      project @automation/api – API tests support
 │       ├── clients/              TasksClient – the API counterpart of page objects
-│       ├── constants/            Todo API routes and test data
+│       ├── constants/            Todo API routes, test data, known issues linked from tests
 │       ├── enums/                HTTP statuses
 │       ├── fixtures/             API client and cleanup of created tasks
 │       └── models/               Task
@@ -323,17 +329,18 @@ independently of this repository) and on demand.
 | Job                      | What it does                                                                  |
 | ------------------------ | ----------------------------------------------------------------------------- |
 | `Quality checks`         | typecheck, lint, format check                                                 |
-| `API tests`              | clones and starts `todo-be`, runs the API tests                               |
+| `API tests (prod)`       | clones and starts `todo-be`, runs the API tests                               |
 | `UI tests (prod)`        | MoroSystems website tests in the desktop configuration, headless              |
 | `UI tests (prod-mobile)` | MoroSystems website tests in the mobile configuration, headless               |
-| `Google tests`           | Google search tests and the E2E journey, headed on a virtual display (`xvfb`) |
+| `UI tests (google)`      | Google search tests and the E2E journey, headed on a virtual display (`xvfb`) |
 
-The test jobs start only after the quality checks pass and run in parallel. Each job uploads its `reports/` folder
-(HTML report, JUnit XML, traces) as an artifact – open a downloaded HTML report with
+The test jobs start only after the quality checks pass and run in parallel. Each test job is a matrix over the
+environments of `setup/environments`, so another environment is added by one matrix entry. Each job uploads its
+`reports/` folder (HTML report, JUnit XML, traces) as an artifact – open a downloaded HTML report with
 `npx playwright show-report <folder>`. Failures are also annotated on the run summary (`github` reporter) and a failed
 test is retried once, so it is reported as _flaky_.
 
-- **Google tests are best effort on CI.** Google often answers requests from cloud runners (data centre IP addresses)
+- **Google tests are best effort on CI.** Google may answer requests from cloud runners (data centre IP addresses)
   with a CAPTCHA even in a headed browser – the test is then skipped with an annotation, not failed. A reliable run
   of the Google tests needs a regular network: locally or on a self-hosted runner.
 - **Linux visual baselines.** A run that creates or re-creates a baseline publishes it as the

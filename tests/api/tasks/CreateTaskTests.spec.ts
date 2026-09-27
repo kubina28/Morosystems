@@ -27,7 +27,7 @@ test.describe('CreateTaskTests', { tag: [Tag.Regression, Tag.Api] }, () => {
     const createdTask = await tasksClient.createTask(TodoApiData.newTaskText);
 
     // Act
-    const tasks = (await (await tasksClient.getAll()).json()) as Task[];
+    const tasks = await tasksClient.getAllTasks();
 
     // Assert
     expect(tasks).toContainEqual(createdTask);

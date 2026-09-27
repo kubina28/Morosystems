@@ -4,7 +4,7 @@ import { Language } from '../../../enums/language.enum';
 import { step } from '@automation/common';
 import { LanguageSwitcher } from './language-switcher.component';
 
-export class MoroHeader {
+export class MorosystemsHeader {
   readonly root: Locator;
   readonly careerLink: Locator;
   readonly aboutUsSubmenuToggle: Locator;

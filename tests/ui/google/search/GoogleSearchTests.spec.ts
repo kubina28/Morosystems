@@ -1,7 +1,7 @@
 import { expect, googleResultsPage, GoogleSearchData, googleSearchPage, page, test } from '@automation/ui';
 import { Tag } from '@automation/common';
 
-test.describe('SearchTests', { tag: [Tag.Regression, Tag.Google] }, () => {
+test.describe('GoogleSearchTests', { tag: [Tag.Regression, Tag.Google] }, () => {
   test.beforeEach(async () => {
     // Arrange
     await googleSearchPage.open();

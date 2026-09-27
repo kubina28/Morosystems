@@ -17,7 +17,6 @@
     "test:api": "playwright test --project=api",
     "test:smoke": "playwright test --grep @smoke",
     "test:regression": "playwright test --grep @regression",
-    "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug",
     "test:update-snapshots": "playwright test --update-snapshots",
     "report": "playwright show-report reports/html",
@@ -32,7 +31,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.63.0",
-    "@types/node": "^26.6.2",
+    "@types/node": "^22.20.4",
     "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import-x": "^4.17.1",

@@ -2,7 +2,7 @@ import {
   careerPage,
   expect,
   Language,
-  moroHomePage,
+  morosystemsHomePage,
   MorosystemsLanguageBaseUrls,
   page,
   test,
@@ -17,11 +17,11 @@ test.describe('LanguageVersionTests', { tag: [Tag.Regression, Tag.Career] }, () 
 
     test(`LanguageVersion_Open${languageName}Homepage_CareerLinkIsNotOffered`, async () => {
       // Act
-      await moroHomePage.open(language);
+      await morosystemsHomePage.open(language);
 
       // Assert
-      await expect(moroHomePage.documentLanguage).toHaveAttribute('lang', new RegExp(`^${language}`));
-      await expect(moroHomePage.careerLinks).toHaveCount(0);
+      await expect(morosystemsHomePage.documentLanguage).toHaveAttribute('lang', new RegExp(`^${language}`));
+      await expect(morosystemsHomePage.careerLinks).toHaveCount(0);
     });
 
     test(`LanguageVersion_SwitchTo${languageName}OnCareerPage_${languageName}HomepageIsOpened`, async () => {
@@ -34,8 +34,8 @@ test.describe('LanguageVersionTests', { tag: [Tag.Regression, Tag.Career] }, () 
       // Assert
       const languageBaseUrl = MorosystemsLanguageBaseUrls[language];
       await expect(page).toHaveURL(new RegExp(`^${escapeRegExp(languageBaseUrl)}`));
-      await expect(moroHomePage.documentLanguage).toHaveAttribute('lang', new RegExp(`^${language}`));
-      await expect(moroHomePage.careerLinks).toHaveCount(0);
+      await expect(morosystemsHomePage.documentLanguage).toHaveAttribute('lang', new RegExp(`^${language}`));
+      await expect(morosystemsHomePage.careerLinks).toHaveCount(0);
     });
   }
 });

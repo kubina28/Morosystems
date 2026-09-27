@@ -4,10 +4,11 @@ import { City } from '../../../enums/city.enum';
 import type { JobPosition } from '../../../models/job-position.model';
 import { CitySelect } from '../../components/morosystems/city-select.component';
 import { type DynamicContent, normalizeWhitespace, splitList, step } from '@automation/common';
-import { MoroBasePage } from './moro-base.page';
+import { MorosystemsBasePage } from './morosystems-base.page';
 
-export class CareerPage extends MoroBasePage {
+export class CareerPage extends MorosystemsBasePage {
   private static readonly graduateFilterValue = 'student';
+  private static readonly jobPositionItemSelector = '.c-positions__item';
 
   readonly jobPositionsHeading: Locator;
   readonly citySelect: CitySelect;
@@ -23,14 +24,14 @@ export class CareerPage extends MoroBasePage {
     this.citySelect = new CitySelect(page);
     this.graduateJobPositionsCheckbox = page.getByRole('checkbox', { name: 'Pozice vhodná pro absolventy' });
     this.graduateJobPositionsLabel = page.locator('label').filter({ has: this.graduateJobPositionsCheckbox });
-    this.jobPositionItems = page.locator('.c-positions__item');
+    this.jobPositionItems = page.locator(CareerPage.jobPositionItemSelector);
     this.visibleJobPositionItems = this.jobPositionItems.filter({ visible: true });
     this.visibleJobPositionLinks = this.visibleJobPositionItems.locator('.c-positions__link');
   }
 
   override get dynamicContent(): DynamicContent {
     const { hidden, removed = [] } = super.dynamicContent;
-    return { hidden, removed: [...removed, this.jobPositionItems] };
+    return { hidden, removed: [...removed, CareerPage.jobPositionItemSelector] };
   }
 
   @step('Open "Kariéra" page')
@@ -60,6 +61,7 @@ export class CareerPage extends MoroBasePage {
   }
 
   async getAllJobPositions(): Promise<JobPosition[]> {
+    await expect(this.jobPositionItems.first(), 'Kariéra page should list open job positions').toBeAttached();
     return this.readJobPositions(this.jobPositionItems);
   }
 
@@ -70,13 +72,18 @@ export class CareerPage extends MoroBasePage {
   private async readJobPositions(items: Locator): Promise<JobPosition[]> {
     const jobPositions: JobPosition[] = [];
     for (const item of await items.all()) {
-      const title = await item.locator('.c-positions__name').textContent();
+      const title = normalizeWhitespace((await item.locator('.c-positions__name').textContent()) ?? '');
       const locations = await item.locator('.c-positions__info').textContent();
-      const filterValues = splitList((await item.getAttribute('data-filter')) ?? '');
+      const filterValues = await item.getAttribute('data-filter');
+      if (filterValues === null) {
+        throw new Error(
+          `Job position "${title}" has no "data-filter" attribute, its suitability for graduates is unknown.`,
+        );
+      }
       jobPositions.push({
-        title: normalizeWhitespace(title ?? ''),
+        title,
         locations: splitList(locations ?? ''),
-        suitableForGraduates: filterValues.includes(CareerPage.graduateFilterValue),
+        suitableForGraduates: splitList(filterValues).includes(CareerPage.graduateFilterValue),
       });
     }
     return jobPositions;

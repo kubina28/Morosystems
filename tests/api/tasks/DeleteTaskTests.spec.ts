@@ -1,6 +1,5 @@
 import { expect, HttpStatus, tasksClient, test, TodoApiData, TodoApiKnownIssues } from '@automation/api';
 import { Tag } from '@automation/common';
-import type { Task } from '@automation/api';
 
 test.describe('DeleteTaskTests', { tag: [Tag.Regression, Tag.Api] }, () => {
   test('DeleteTask_ExistingTask_ReturnsOk', async () => {
@@ -22,7 +21,7 @@ test.describe('DeleteTaskTests', { tag: [Tag.Regression, Tag.Api] }, () => {
     await tasksClient.delete(createdTask.id);
 
     // Assert
-    const tasks = (await (await tasksClient.getAll()).json()) as Task[];
+    const tasks = await tasksClient.getAllTasks();
     expect(tasks.map((task) => task.id)).not.toContain(createdTask.id);
   });
 

@@ -2,7 +2,6 @@ import { defineConfig } from '@playwright/test';
 import { environment, PlaywrightFactory, Timeouts } from '@automation/common';
 
 export default defineConfig({
-  testDir: './tests',
   outputDir: './reports/test-results',
   timeout: Timeouts.perTestMs,
   expect: { timeout: Timeouts.assertionMs },

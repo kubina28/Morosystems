@@ -42,10 +42,15 @@ jobs:
       - run: npm run format:check
 
   api-tests:
-    name: API tests
+    name: API tests (${{ matrix.environment }})
     needs: quality
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    strategy:
+      matrix:
+        environment: [prod]
+    env:
+      TEST_ENV: ${{ matrix.environment }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -64,12 +69,12 @@ jobs:
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
-          name: report-api
+          name: report-api-${{ matrix.environment }}
           path: reports/
           retention-days: 14
 
   ui-tests:
-    name: UI tests (${{ matrix.environment }})
+    name: UI tests (${{ matrix.name }})
     needs: quality
     # Visual baselines depend on the rendering of the operating system, so the image is pinned in every job.
     runs-on: ubuntu-24.04
@@ -77,10 +82,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        environment: [prod, prod-mobile]
+        include:
+          - name: prod
+            environment: prod
+            filter: --grep-invert @google
+            headless: true
+          - name: prod-mobile
+            environment: prod-mobile
+            filter: --grep-invert @google
+            headless: true
+          # Google serves a CAPTCHA to headless browsers far more often, so its tests run headed on a virtual display.
+          - name: google
+            environment: prod
+            filter: --grep @google
+            headless: false
     env:
       TEST_ENV: ${{ matrix.environment }}
-      HEADLESS: true
+      HEADLESS: ${{ matrix.headless }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -90,7 +108,7 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Run UI tests
-        run: npx playwright test tests/ui --grep-invert @google ${{ inputs.update-snapshots && '--update-snapshots=changed' || '' }}
+        run: xvfb-run --auto-servernum npx playwright test tests/ui ${{ matrix.filter }} ${{ inputs.update-snapshots && '--update-snapshots=changed' || '' }}
       # Playwright writes a missing or re-created baseline next to the committed ones; only those are published.
       - name: Collect new visual baselines
         if: ${{ !cancelled() }}
@@ -102,37 +120,13 @@ jobs:
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
-          name: visual-baselines-${{ matrix.environment }}
+          name: visual-baselines-${{ matrix.name }}
           path: ${{ runner.temp }}/baselines/
           if-no-files-found: ignore
       - name: Upload report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
-          name: report-ui-${{ matrix.environment }}
-          path: reports/
-          retention-days: 14
-
-  google-tests:
-    name: Google tests
-    needs: quality
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      # Google serves a CAPTCHA to headless browsers far more often, so the browser runs headed on a virtual display.
-      - name: Run Google tests
-        run: xvfb-run --auto-servernum npx playwright test --grep @google
-      - name: Upload report
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: report-google
+          name: report-ui-${{ matrix.name }}
           path: reports/
           retention-days: 14

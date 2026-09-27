@@ -1,9 +1,5 @@
 node_modules/
 reports/
-playwright/.cache/
-/test-results/
-/playwright-report/
-*.local.env
 .env
 .DS_Store
 .todo-be/
