@@ -95,17 +95,29 @@ position texts.
 
 ### Cross-browser
 
-Presets for Firefox, WebKit (Safari engine) and Microsoft Edge are prepared in `PlaywrightFactory`, the default run
-uses Chromium only. Install the browsers once and select them with `BROWSERS`:
+Presets for Chromium, Firefox, WebKit (Safari engine) and Microsoft Edge are prepared in `PlaywrightFactory`. The
+default run and CI use Chromium only – runs stay short and every other browser needs its own visual baselines.
+Install the browsers once and select them with `BROWSERS`:
 
 ```bash
 npx playwright install firefox webkit msedge
 BROWSERS=chromium,firefox,webkit,msedge npm test
 ```
 
-Each browser gets its own website and Google project. The automation flag that lowers the chance of a Google
-CAPTCHA can be hidden only in Chromium-based browsers (Chrome, Edge), so Google tests may be skipped more often in
-Firefox and WebKit.
+Each browser gets its own website and Google project. Results of the desktop UI tests (19 per browser):
+
+| Browser                         | Passed | Not passed                                                                    |
+| ------------------------------- | ------ | ----------------------------------------------------------------------------- |
+| Chromium (CI, Linux)            | 19     | –                                                                             |
+| Microsoft Edge 154 (Windows 10) | 17     | hover highlight (BUG-001), visual test without baseline                       |
+| Firefox 155 (Windows 10)        | 13     | language switch (BUG-001), visual test without baseline, Google tests skipped |
+| WebKit 26.6 (Windows 10)        | 13     | language switch (BUG-001), visual test without baseline, Google tests skipped |
+
+- **Visual baselines** exist for Chromium only; the first run in another browser creates its baselines.
+- **Google tests** were skipped in Firefox and WebKit because of a CAPTCHA – the automation flag can be hidden
+  only in Chromium-based browsers (Chrome, Edge).
+- **Language switch** – in Firefox and WebKit one of the four language tests occasionally fails, a different
+  language each run. It is the same kind of website defect as the filters (see BUG-001).
 
 ### Mobile
 

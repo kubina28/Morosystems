@@ -1,13 +1,13 @@
 # BUG-001: Kariéra – filters react about 1 s late on the first interaction
 
-|                     |                                                                                                              |
-| ------------------- | ------------------------------------------------------------------------------------------------------------ |
-| **Page**            | https://www.morosystems.cz/kariera/ – section _Koho hledáme_                                                 |
-| **Component**       | city select box (_Všechna města_), checkbox _Pozice vhodná pro absolventy_, highlight of a position on hover |
-| **Severity**        | Low – the filters work, but do not respond to the first interaction immediately                              |
-| **Reproducibility** | 8 of 8 attempts                                                                                              |
-| **Environment**     | production, Chromium 153 (Playwright 1.63), Windows 10                                                       |
-| **Found**           | 2026-09-25                                                                                                   |
+|                     |                                                                                                                                               |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Page**            | https://www.morosystems.cz/kariera/ – section _Koho hledáme_                                                                                  |
+| **Component**       | city select box (_Všechna města_), checkbox _Pozice vhodná pro absolventy_, highlight of a position on hover, language switcher in the header |
+| **Severity**        | Low – the filters work, but do not respond to the first interaction immediately                                                               |
+| **Reproducibility** | 8 of 8 attempts                                                                                                                               |
+| **Environment**     | production, Chromium 153, Microsoft Edge 154, Firefox 155, WebKit 26.6 (Playwright 1.63), Windows 10                                          |
+| **Found**           | 2026-09-25                                                                                                                                    |
 
 ## Steps to reproduce
 
@@ -32,6 +32,11 @@ The list of cities opens (the positions are filtered) immediately after the clic
   (`.no-touchevents .c-positions__link:hover` – dark background, white text) depends on the `no-touchevents` class,
   which the delayed Modernizr script adds to `<html>`. On the first hover after the page load the text colour stayed
   `rgb(37, 39, 70)`; the class was still missing 8 s later.
+- In Firefox and WebKit the language switcher in the header occasionally does not show the languages after the
+  first click (1–2 of the 4 language switch tests in both browsers per run, a different language each time; not
+  observed in Chromium and Edge). The trace of a failed test shows the click on the switcher while the page is still in the `no-js`
+  state, the delayed scripts loading during the click, the dropdown getting the `is-open` class about 300 ms later,
+  and the language links staying hidden until the 15 s timeout.
 
 ## Evidence
 
